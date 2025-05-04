@@ -1,0 +1,96 @@
+body {
+      background-color: #1f2223;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      color: white;
+      padding: 20px;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    #controls {
+      margin-bottom: 20px;
+    }
+
+    select, button {
+      font-size: 16px;
+      padding: 8px 12px;
+      margin: 0 8px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    #panel {
+      max-width: min(90vw, 90vh, 500px);
+      height: min(90vw, 90vh, 500px);
+      background: #818383;
+      padding: 5px;
+      margin: auto;
+      border-radius: 8px;
+    }
+
+    .inner-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .row {
+      display: flex;
+      flex: 1;
+    }
+
+    .tile {
+      flex: 1;
+      background: #2d2d2d;
+      border: 1px solid black;
+      margin: 1px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .tile--fill {
+      background: white;
+    }
+
+    .footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      font-size: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer span {
+      font-weight: bold;
+    }
+
+    #lives {
+        font-size: 24px;
+        letter-spacing: 4px;
+      }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 28px;
+      }
+
+      select, button {
+        font-size: 14px;
+      }
+
+      .footer {
+        font-size: 16px;
+        gap: 20px;
+      }
+    }
