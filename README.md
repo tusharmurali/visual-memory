@@ -5,7 +5,6 @@ A customizable web-based visual memory test inspired by the Human Benchmark game
 - Start from any level (1, 3, 5, 7, 10)
 - Responsive tile grid with increasing difficulty
 - Life tracking and level progression
-- Clean, interactive UI with fast feedback
 
 ## How It Works
 
