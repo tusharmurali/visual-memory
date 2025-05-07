@@ -3,68 +3,48 @@ const totalLives = 3;
 const displayTimer = 2000;
 const flashDuration = 500;
 
-let level = localStorage.getItem("level")
-  ? parseInt(localStorage.getItem("level"))
-  : 5;
-let difficulty = 1;
+// Game State
+let level = parseInt(localStorage.getItem("level")) || 5;
 let currentLives = totalLives;
 let wrongClicks = 0;
 let clickable = false;
 
-const correctSound = document.getElementById("correctSound");
-const wrongSound = document.getElementById("wrongSound");
-const levelUpSound = document.getElementById("levelUpSound");
-const gameOverSound = document.getElementById("gameOverSound");
+// Sounds
+const sounds = {
+  correct: document.getElementById("correctSound"),
+  wrong: document.getElementById("wrongSound"),
+  levelUp: document.getElementById("levelUpSound"),
+  gameOver: document.getElementById("gameOverSound")
+};
 
-// Add event listeners to the level buttons
-$(".levelBtn").on("click", function () {
-  level = this.getAttribute("data-level");
+// Event Listeners
+$(".levelBtn").on("click", handleLevelSelection);
+$("#panel").on("click", ".tile", handleTileClick);
+
+// Game Functions
+function handleLevelSelection() {
+  $("#panel").html();
+  level = parseInt(this.getAttribute("data-level"));
   localStorage.setItem("level", level);
   resetGame();
   loadLevel();
-});
+}
 
-// Tile Click Handler
-$("#panel").on("click", ".tile", function () {
-  if (!clickable) return;
+function handleTileClick() {
+  if (!clickable || $(this).hasClass("tile--disabled")) return;
 
-  $(this).addClass("tile--fill");
-
-  const tileFilled = $(this).attr("data-filled") === "1";
-
-  if (!tileFilled) {
-    wrongSound.play();
-    $(this).addClass("tile--wrong");
-    wrongClicks++;
-
-    if (wrongClicks >= 3) {
-      clickable = false;
-      wrongClicks = 0;
-      updateLives(currentLives - 1);
-
-      if (currentLives <= 0) {
-        gameOverSound.play();
-        setTimeout(() => alert("Game over! Restarting..."), 300);
-        resetGame();
-      }
-
-      setTimeout(() => {
-        $(".tile--wrong").removeClass("tile--wrong");
-        loadLevel();
-      }, 500);
-    }
-  } else {
-    handleCorrectClick();
-  }
-});
+  const tile = $(this).addClass("tile--fill").addClass("tile--disabled");
+  
+  const isCorrect = tile.attr("data-filled") === "1";
+  isCorrect ? handleCorrectClick() : handleWrongClick(tile);
+}
 
 // Game Functions
 function loadLevel() {
-  $("#panel").html(generateBoard(true));
+  $("#panel").html(generateBoard());
   wrongClicks = 0;
   setTimeout(() => {
-    $(".tile--fill").removeClass("tile--fill");
-    $(".tile--wrong").removeClass("tile--wrong");
+    $(".tile").removeClass("tile--disabled tile--fill tile--wrong");
     clickable = true;
   }, displayTimer);
   $("#level").text(level);
@@ -72,47 +52,59 @@ function loadLevel() {
 
 function updateLives(value) {
   currentLives = value;
-  const hearts =
-    "❤️".repeat(currentLives) + "🖤".repeat(totalLives - currentLives);
+  const hearts = "❤️".repeat(currentLives) + "🖤".repeat(totalLives - currentLives);
   $("#lives").html(hearts);
 }
 
 function resetGame() {
+  $("#panel").html("<div id='startOverlay'>Choose a Starting Level</div>");
   currentLives = totalLives;
   updateLives(currentLives);
   $("#level").text("");
 }
 
-function handleWrongClick() {
+function handleWrongClick(tile) {
+  sounds.wrong.play();
+  wrongClicks++;
+  tile.addClass("tile--wrong");
+  
+  if (wrongClicks < 3) return;
+
   clickable = false;
-  wrongSound.play();
-  setTimeout(() => $(".tile").removeClass("tile--fill"), 200);
+  wrongClicks = 0;
   updateLives(currentLives - 1);
 
   if (currentLives <= 0) {
-    gameOverSound.play();
-    setTimeout(() => alert("Game over! Restarting..."), 300);
-    resetGame();
+    sounds.gameOver.play();
+    setTimeout(resetGame, 300);
+    return;
   }
+
+  setTimeout(() => {
+    tile.removeClass("tile--wrong");
+    loadLevel();
+  }, 500);
 }
 
 function handleCorrectClick() {
-  correctSound.play();
-  if ($(".tile--fill").length === $("[data-filled='1']").length) {
-    clickable = false;
-    levelUpSound.play();
-    setTimeout(() => {
-      level++;
-      $("#level").text(level);
-      loadLevel();
-    }, flashDuration);
-  }
+  sounds.correct.play();
+  setTimeout(() => {
+    if ($(".tile--fill").length === $("[data-filled='1']").length) {
+      clickable = false;
+      sounds.levelUp.play();
+      setTimeout(() => {
+        level++;
+        $("#level").text(level);
+        loadLevel();
+      }, flashDuration);
+    }
+  }, 100);
 }
 
-function generateBoard(showTiles = true) {
+function generateBoard() {
   const boardXY = 3 + Math.floor(level / 2);
   const baseHighlight = Math.ceil(5 + level * 0.7);
-  const variation = Math.floor(Math.random() * 5) - 2; // -2 to +2
+  const variation = Math.floor(Math.random() * 3) - 1; // -1 to +1
   const numToHighlight = Math.max(1, baseHighlight + variation);
   const board = $("<div class='inner-panel'>");
 
@@ -129,18 +121,10 @@ function generateBoard(showTiles = true) {
     board.append(rowTiles);
   }
 
-  if (showTiles) {
-    highlightRandomTiles(allTiles, numToHighlight);
-  }
+  const selectedTiles = getRandom(allTiles, numToHighlight);
+  selectedTiles.forEach(tile => tile.attr("data-filled", 1).addClass("tile--fill"));
 
   return board;
-}
-
-function highlightRandomTiles(allTiles, numToHighlight) {
-  const selected = getRandom(allTiles, numToHighlight);
-  selected.forEach((tile) => {
-    tile.attr("data-filled", 1).addClass("tile--fill");
-  });
 }
 
 function getRandom(arr, n) {
